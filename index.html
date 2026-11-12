@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <!-- ACCESIBILIDAD UNIVERSAL: Zoom habilitado hasta 5.0x -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>ADEP IA - Portal Accesible e Inteligencia Artificial</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            adepRed: '#C8102E',
+            adepGreen: '#008751',
+            adepGold: '#C28E00',
+            adepDark: '#1E293B',
+            adepCard: '#F8FAFC'
+          },
+          fontFamily: {
+            sans: ['Lexend', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ACCESIBILIDAD Y ADAPTABILIDAD - FONDO BLANCO PURO */
+    html {
+      font-size: 19px;
+    }
+
+    body {
+      background-color: #FFFFFF !important;
+      color: #1E293B !important;
+      font-family: 'Lexend', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    
+    #water-bg-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.15;
+    }
+
+    /* MODO ALTO CONTRASTE (Cumplimiento WCAG) */
+    .high-contrast {
+      background-color: #000000 !important;
+      color: #FFFF00 !important;
+    }
+    
+    .high-contrast .bg-adepCard,
+    .high-contrast .bg-slate-800,
+    .high-contrast .bg-slate-900,
+    .high-contrast .bg-slate-950 {
+      background-color: #000000 !important;
+      border: 3px solid #FFFF00 !important;
+      color: #FFFF00 !important;
+    }
+
+    .high-contrast button, 
+    .high-contrast input {
+      border: 3px solid #FFFF00 !important;
+      background-color: #000000 !important;
+      color: #FFFF00 !important;
+      font-weight: 800 !important;
+    }
+
+    /* BOTONES AMPLIOS PARA PANTALLAS TÁCTILES */
+    button, a, input {
+      min-height: 48px;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible, input:focus-visible {
+      outline: 4px solid #C28E00 !important;
+      outline-offset: 2px;
+    }
+
+    .adep-glow {
+      box-shadow: 0 10px 30px rgba(0, 135, 81, 0.15);
+      border: 2px solid rgba(0, 135, 81, 0.3);
+    }
+
+    ::-webkit-scrollbar {
+      height: 10px;
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #008751;
+      border-radius: 5px;
+    }
+
+    @keyframes floatSlow {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0px); }
+    }
+    .float-anim {
+      animation: floatSlow 4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+  <!-- ESCENA 3D DE FONDO -->
+  <canvas id="water-bg-canvas"></canvas>
+
+  <!-- 1. MODAL REGISTRO DE NOMBRE INICIAL -->
+  <div id="welcome-modal" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-50 border-2 border-adepRed rounded-3xl p-6 md:p-10 max-w-lg w-full text-center shadow-2xl adep-glow">
+      <img src="https://colegiodeterapeutas.cr/wp-content/uploads/formidable/31/Logo-ADEP-1024x1020.png" alt="Logo de ADEP" class="h-28 w-28 mx-auto bg-white rounded-full p-2 mb-4 border-2 border-adepGreen shadow-xl">
+      <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-3">¡Bienvenido(a) a ADEP IA!</h1>
+      <p class="text-slate-700 text-base md:text-lg mb-6">Por favor, escribe tu nombre para comenzar:</p>
+      
+      <input type="text" id="user-name-input" placeholder="Escribe tu nombre aquí..." aria-label="Escribe tu nombre"
+             class="w-full bg-white border-2 border-slate-300 focus:border-adepGreen text-slate-900 text-center px-4 py-4 rounded-2xl text-lg md:text-xl outline-none mb-6 shadow-inner">
+      
+      <button onclick="saveUserName()" class="w-full bg-adepGreen hover:bg-emerald-700 text-white font-extrabold py-4 rounded-2xl text-lg md:text-xl shadow-xl transition transform hover:scale-105 flex items-center justify-center gap-2">
+        ✨ Entrar al Centro de Exploración
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. CENTRO DE EXPLORACIÓN / PORTAL LIMPIO -->
+  <div id="presentation-modal" class="fixed inset-0 bg-white z-50 flex items-center justify-center p-3 md:p-6 hidden overflow-y-auto">
+    <div class="bg-slate-50 border-2 border-adepGold rounded-3xl p-5 md:p-8 max-w-5xl w-full shadow-2xl adep-glow my-auto relative flex flex-col justify-between min-h-[500px]">
+      
+      <!-- Cabecera -->
+      <div class="flex flex-col sm:flex-row justify-between items-center border-b border-slate-200 pb-4 mb-5 gap-3">
+        <div class="flex items-center gap-3">
+          <img src="https://colegiodeterapeutas.cr/wp-content/uploads/formidable/31/Logo-ADEP-1024x1020.png" alt="Logo ADEP" class="h-12 w-12 bg-white rounded-full p-1 border-2 border-adepGreen shadow">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900">ADEP IA</h2>
+            <p class="text-sm text-slate-600">Centro de Exploración y Accesibilidad</p>
+          </div>
+        </div>
+        <button onclick="closePresentation()" class="bg-adepRed hover:bg-red-700 text-white font-extrabold px-6 py-3 rounded-2xl shadow-lg transition text-base flex items-center gap-2">
+          🚀 ¡Iniciar Aplicación!
+        </button>
+      </div>
+
+      <!-- BOTONES DE NAVEGACIÓN -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+        <button onclick="switchPortalTab(1)" id="portal-btn-1" class="portal-tab bg-adepGreen text-white p-4 rounded-2xl font-extrabold border-2 border-adepGold text-sm sm:text-base flex flex-col items-center gap-2 shadow transition">
+          <i class="fa-solid fa-robot text-xl text-amber-200"></i> 1. ¿Qué es la IA?
+        </button>
+        <button onclick="switchPortalTab(2)" id="portal-btn-2" class="portal-tab bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-bold border border-slate-300 text-sm sm:text-base flex flex-col items-center gap-2 shadow transition">
+          <i class="fa-solid fa-shield-halved text-xl text-adepGold"></i> 2. Seguridad
+        </button>
+        <button onclick="switchPortalTab(3)" id="portal-btn-3" class="portal-tab bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-bold border border-slate-300 text-sm sm:text-base flex flex-col items-center gap-2 shadow transition">
+          <i class="fa-solid fa-brain text-xl text-adepGold"></i> 3. Bienestar
+        </button>
+        <button onclick="switchPortalTab(4)" id="portal-btn-4" class="portal-tab bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-bold border border-slate-300 text-sm sm:text-base flex flex-col items-center gap-2 shadow transition">
+          <i class="fa-solid fa-users text-xl text-adepGold"></i> 4. Guías 3D
+        </button>
+      </div>
+
+      <!-- PESTAÑAS INTERACTIVAS -->
+      <div class="flex-grow bg-white border border-slate-200 rounded-2xl p-5 md:p-6 mb-5 text-left relative shadow-sm">
+        <div id="portal-pane-1" class="portal-pane space-y-4">
+          <div class="flex items-center gap-3">
+            <div class="bg-adepGreen/10 p-3 rounded-2xl text-adepGreen text-2xl border border-adepGreen/30"><i class="fa-solid fa-lightbulb"></i></div>
+            <h3 class="text-xl font-bold text-slate-900">Inteligencia Artificial Sencilla</h3>
+          </div>
+          <p class="text-slate-700 text-base md:text-lg leading-relaxed">
+            La IA es un asistente digital amigable. Funciona como un consejero educado listo para conversar contigo, buscar recetas de cocina, responder preguntas o leer historias sin esforzar la vista.
+          </p>
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm md:text-base text-slate-700 flex items-center gap-3">
+            <i class="fa-solid fa-volume-high text-adepGold text-xl"></i>
+            <span>Todas las respuestas se leen en voz alta automáticamente para tu comodidad.</span>
+          </div>
+        </div>
+
+        <div id="portal-pane-2" class="portal-pane space-y-4 hidden">
+          <div class="flex items-center gap-3">
+            <div class="bg-adepRed/10 p-3 rounded-2xl text-adepRed text-2xl border border-adepRed/30"><i class="fa-solid fa-lock"></i></div>
+            <h3 class="text-xl font-bold text-slate-900">Espacio 100% Seguro</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <strong class="text-adepRed text-lg block mb-1">🚫 Sin Bancos ni Claves</strong>
+              <span class="text-sm text-slate-700">La aplicación NUNCA te pedirá números de tarjeta ni datos financieros.</span>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <strong class="text-adepGreen text-lg block mb-1">🛡️ Privacidad Garantizada</strong>
+              <span class="text-sm text-slate-700">Tus consultas son completamente privadas y seguras.</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="portal-pane-3" class="portal-pane space-y-4 hidden">
+          <div class="flex items-center gap-3">
+            <div class="bg-amber-500/10 p-3 rounded-2xl text-adepGold text-2xl border border-amber-500/30"><i class="fa-solid fa-heart-pulse"></i></div>
+            <h3 class="text-xl font-bold text-slate-900">Salud y Mente Activa</h3>
+          </div>
+          <p class="text-slate-700 text-base md:text-lg leading-relaxed">
+            Disfruta de juegos de memoria, adivinanzas tradicionales de Costa Rica y reflexiones para ejercitar la mente de forma divertida.
+          </p>
+        </div>
+
+        <div id="portal-pane-4" class="portal-pane space-y-4 hidden">
+          <div class="flex items-center gap-3">
+            <div class="bg-emerald-500/10 p-3 rounded-2xl text-emerald-600 text-2xl border border-emerald-400/30"><i class="fa-solid fa-cube"></i></div>
+            <h3 class="text-xl font-bold text-slate-900">Personajes Interactivos 3D</h3>
+          </div>
+          <p class="text-slate-700 text-base leading-relaxed">
+            Elige a tu compañero favorito para interactuar en pantalla:
+          </p>
+          <div class="grid grid-cols-3 gap-3 text-center text-sm font-bold">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-adepRed">🤖 Robot</div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-adepGold">🦉 Búho Sabio</div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-emerald-600">⭐ Estrella</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie del Modal -->
+      <div class="flex justify-between items-center pt-3 border-t border-slate-200 text-sm text-slate-600">
+        <span>Asociación de Educadores Pensionados (ADEP)</span>
+        <button onclick="closePresentation()" class="text-adepGreen font-bold hover:underline flex items-center gap-1 text-base">
+          Omitir e ingresar ➡️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENEDOR PRINCIPAL DE LA APLICACIÓN -->
+  <div id="app-main-content" class="hidden flex-grow flex flex-col justify-between w-full">
+
+    <!-- BARRA SUPERIOR ACCESIBLE -->
+    <header class="bg-white border-b-2 border-adepGreen sticky top-0 z-40 px-4 py-3 shadow-sm">
+      <div class="max-w-7xl mx-auto flex justify-between items-center gap-2">
+        <div class="flex items-center space-x-3">
+          <img src="https://colegiodeterapeutas.cr/wp-content/uploads/formidable/31/Logo-ADEP-1024x1020.png" 
+               alt="Logo ADEP" class="h-10 w-10 object-contain bg-white rounded-full p-1 border-2 border-adepRed shadow">
+          <div>
+            <h1 class="font-extrabold text-lg md:text-2xl text-slate-900">ADEP <span class="text-adepGreen">IA</span></h1>
+            <p class="text-xs md:text-sm text-slate-600" id="header-user-greeting">Asociación de Educadores Pensionados</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="toggleHighContrast()" aria-label="Cambiar a modo de alto contraste" class="px-4 py-2 bg-amber-400 text-slate-900 font-extrabold rounded-xl text-sm flex items-center gap-2 shadow-md hover:bg-amber-500 transition">
+            <i class="fa-solid fa-eye text-base"></i> <span class="hidden sm:inline">Ver Mejor</span>
+          </button>
+          <button onclick="stopAudio()" aria-label="Detener voz hablada" class="px-4 py-2 bg-adepRed text-white font-extrabold rounded-xl text-sm flex items-center gap-2 shadow-md hover:bg-red-700 transition">
+            <i class="fa-solid fa-volume-xmark text-base"></i> <span class="hidden sm:inline">Silenciar</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVEGACIÓN PRINCIPAL -->
+    <nav class="bg-slate-100 border-b border-slate-200 py-3 px-3 sticky top-[65px] z-30 overflow-x-auto shadow-sm">
+      <div class="max-w-7xl mx-auto flex sm:grid sm:grid-cols-6 gap-2.5 min-w-max sm:min-w-0">
+        <button onclick="switchTab('home')" id="tab-home" class="tab-btn px-4 py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 bg-adepRed text-white text-sm md:text-base text-center shrink-0 shadow">
+          <i class="fa-solid fa-robot"></i> Asistente
+        </button>
+        <button onclick="switchTab('world')" id="tab-world" class="tab-btn px-4 py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 bg-white text-slate-700 hover:bg-slate-200 border border-slate-300 text-sm md:text-base text-center shrink-0 shadow">
+          <i class="fa-solid fa-brain"></i> Mundo IA
+        </button>
+        <button onclick="switchTab('games')" id="tab-games" class="tab-btn px-4 py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 bg-white text-slate-700 hover:bg-slate-200 border border-slate-300 text-sm md:text-base text-center shrink-0 shadow">
+          <i class="fa-solid fa-gamepad"></i> Juegos
+        </button>
+        <button onclick="switchTab('bubbles')" id="tab-bubbles" class="tab-btn px-4 py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 bg-white text-slate-700 hover:bg-slate-200 border border-slate-300 text-sm md:text-base text-center shrink-0 shadow">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Paz
+        </button>
+        <button onclick="switchTab('memories')" id="tab-memories" class="tab-btn px-4 py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 bg-white text-slate-700 hover:bg-slate-200 border border-slate-300 text-sm md:text-base text-center shrink-0 shadow">
+          <i class="fa-solid fa-heart"></i> Recuerdos
+        </button>
+        <button onclick="switchTab('farewell')" id="tab-farewell" class="tab-btn px-4 py-3 rounded-2xl font-extrabold flex items-center justify-center gap-2 bg-white text-slate-700 hover:bg-slate-200 border border-slate-300 text-sm md:text-base text-center shrink-0 shadow">
+          <i class="fa-solid fa-flag-checkered"></i> Salida
+        </button>
+      </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+
+      <!-- SECCIÓN 1: ASISTENTE IA -->
+      <section id="section-home" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-5 bg-slate-50 border border-adepGreen/40 rounded-3xl p-5 flex flex-col items-center justify-between shadow-xl adep-glow">
+          <div class="w-full flex justify-between items-center mb-3">
+            <span class="bg-adepGreen text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-signal text-white animate-pulse"></i> GUÍA 3D
+            </span>
+            <span class="text-sm font-semibold text-slate-700">Elige personaje:</span>
+          </div>
+
+          <div class="w-full grid grid-cols-3 gap-2 mb-4">
+            <button onclick="setMascot('robot')" id="btn-mascot-robot" class="bg-adepRed text-white py-3 px-2 rounded-2xl font-extrabold text-sm border-2 border-adepGold shadow flex flex-col items-center gap-1">
+              <i class="fa-solid fa-robot text-xl"></i> Robot
+            </button>
+            <button onclick="setMascot('owl')" id="btn-mascot-owl" class="bg-white text-slate-800 hover:bg-slate-100 py-3 px-2 rounded-2xl font-extrabold text-sm border border-slate-300 shadow flex flex-col items-center gap-1">
+              <i class="fa-solid fa-feather text-xl text-adepGold"></i> Búho
+            </button>
+            <button onclick="setMascot('star')" id="btn-mascot-star" class="bg-white text-slate-800 hover:bg-slate-100 py-3 px-2 rounded-2xl font-extrabold text-sm border border-slate-300 shadow flex flex-col items-center gap-1">
+              <i class="fa-solid fa-star text-xl text-adepGold"></i> Estrella
+            </button>
+          </div>
+
+          <div id="robot-container" class="w-full h-[280px] sm:h-[320px] bg-slate-900 rounded-2xl relative border border-adepGreen/40 shadow-inner">
+            <div class="absolute bottom-2 left-2 right-2 text-center text-xs text-slate-200 bg-slate-950/80 py-1.5 rounded-xl border border-adepGreen/30 pointer-events-none z-10">
+              👈 Arrastra para mover al personaje 3D 👉
+            </div>
+          </div>
+
+          <div class="w-full grid grid-cols-3 gap-2 mt-4">
+            <button onclick="actionMascotPrimary()" id="action-btn-1" class="bg-white hover:bg-slate-100 text-slate-800 py-3 rounded-xl text-sm font-bold border border-slate-300 shadow flex flex-col items-center gap-1">
+              <i class="fa-solid fa-hand text-lg text-adepGold"></i> <span id="label-btn-1">Saludar</span>
+            </button>
+            <button onclick="actionMascotSecondary()" id="action-btn-2" class="bg-white hover:bg-slate-100 text-slate-800 py-3 rounded-xl text-sm font-bold border border-slate-300 shadow flex flex-col items-center gap-1">
+              <i class="fa-solid fa-music text-lg text-adepGold"></i> <span id="label-btn-2">Celebrar</span>
+            </button>
+            <button onclick="resetRobot()" class="bg-white hover:bg-slate-100 text-slate-800 py-3 rounded-xl text-sm font-bold border border-slate-300 shadow flex flex-col items-center gap-1">
+              <i class="fa-solid fa-rotate-left text-lg text-adepGold"></i> Centrar
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-50 border border-adepGreen/40 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col adep-glow">
+          <div class="border-b border-slate-200 pb-3 mb-4">
+            <h2 class="text-xl md:text-2xl font-extrabold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-comments text-adepRed"></i> Preguntas Frecuentes
+            </h2>
+            <p class="text-sm text-slate-600">Toca cualquier botón para escuchar la respuesta hablada:</p>
+          </div>
+
+          <div id="chat-box" class="flex-grow overflow-y-auto space-y-3 pr-2 mb-4 max-h-[220px]">
+            <div class="bg-white border border-adepGreen/40 rounded-2xl p-4 shadow-sm">
+              <p class="text-sm font-bold text-adepGold mb-1"><i class="fa-solid fa-robot"></i> Asistente ADEP:</p>
+              <p class="text-base text-slate-800">¡Pura vida! Selecciona cualquiera de las opciones abajo para comenzar.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-auto">
+            <button onclick="askPresetQuestion('¿Qué es la ADEP y cuáles son sus beneficios?')" class="bg-white hover:bg-adepRed hover:text-white text-slate-800 p-4 rounded-2xl border border-slate-300 text-sm md:text-base font-bold text-left flex items-center gap-3 shadow transition group">
+              <i class="fa-solid fa-landmark text-adepGold text-xl shrink-0"></i>
+              <span>🏛️ ¿Qué es la ADEP?</span>
+            </button>
+            <button onclick="askPresetQuestion('¿Cómo puedo cuidar mi salud y bienestar diario?')" class="bg-white hover:bg-adepRed hover:text-white text-slate-800 p-4 rounded-2xl border border-slate-300 text-sm md:text-base font-bold text-left flex items-center gap-3 shadow transition group">
+              <i class="fa-solid fa-heart-pulse text-adepGold text-xl shrink-0"></i>
+              <span>💚 Consejos de Salud</span>
+            </button>
+            <button onclick="askPresetQuestion('¿Qué actividades recreativas y paseos ofrece la asociación?')" class="bg-white hover:bg-adepRed hover:text-white text-slate-800 p-4 rounded-2xl border border-slate-300 text-sm md:text-base font-bold text-left flex items-center gap-3 shadow transition group">
+              <i class="fa-solid fa-bus text-adepGold text-xl shrink-0"></i>
+              <span>🎉 Paseos y Actividades</span>
+            </button>
+            <button onclick="askPresetQuestion('¿Cómo mantengo mis datos seguros en internet?')" class="bg-white hover:bg-adepRed hover:text-white text-slate-800 p-4 rounded-2xl border border-slate-300 text-sm md:text-base font-bold text-left flex items-center gap-3 shadow transition group">
+              <i class="fa-solid fa-shield-halved text-adepGold text-xl shrink-0"></i>
+              <span>🛡️ Seguridad Digital</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 2: MUNDO IA -->
+      <section id="section-world" class="hidden">
+        <div class="bg-slate-50 border border-adepGreen/40 rounded-3xl p-6 md:p-8 shadow-xl max-w-5xl mx-auto adep-glow space-y-6">
+          <div class="text-center">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 flex items-center justify-center gap-2">
+              <i class="fa-solid fa-brain text-adepGreen"></i> Diccionario de Tecnología
+            </h2>
+            <p class="text-base text-slate-600 mt-2">Toca cualquier tarjeta para escuchar su significado en voz alta:</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div onclick="explainConcept('Nube', 'La Nube es como un gran baúl digital en internet donde se guardan fotos y documentos de forma segura sin llenar tu teléfono.')" 
+                 class="bg-white border-2 border-slate-200 p-5 rounded-2xl cursor-pointer hover:border-adepGreen shadow transition">
+              <i class="fa-solid fa-cloud text-4xl text-adepGold mb-3"></i>
+              <h3 class="font-extrabold text-slate-900 text-xl mb-1">☁️ La Nube</h3>
+              <p class="text-sm text-slate-600">Guardado seguro en internet.</p>
+            </div>
+
+            <div onclick="explainConcept('Algoritmo', 'Un algoritmo es una receta paso a paso que la computadora sigue para resolver una tarea.')" 
+                 class="bg-white border-2 border-slate-200 p-5 rounded-2xl cursor-pointer hover:border-adepGreen shadow transition">
+              <i class="fa-solid fa-list-check text-4xl text-adepGold mb-3"></i>
+              <h3 class="font-extrabold text-slate-900 text-xl mb-1">📋 Algoritmo</h3>
+              <p class="text-sm text-slate-600">Pasos ordenados para realizar algo.</p>
+            </div>
+
+            <div onclick="explainConcept('Prompt', 'Un Prompt es la frase o pregunta sencilla que le dices a la Inteligencia Artificial para que te responda.')" 
+                 class="bg-white border-2 border-slate-200 p-5 rounded-2xl cursor-pointer hover:border-adepGreen shadow transition">
+              <i class="fa-solid fa-comment-dots text-4xl text-adepGold mb-3"></i>
+              <h3 class="font-extrabold text-slate-900 text-xl mb-1">💬 Prompt</h3>
+              <p class="text-sm text-slate-600">Tu pregunta para la IA.</p>
+            </div>
+          </div>
+
+          <div id="concept-display" class="bg-white border border-slate-200 p-5 rounded-2xl text-center min-h-[80px] flex items-center justify-center shadow-inner">
+            <p class="text-slate-500 italic text-base">Selecciona una tarjeta arriba para leer y escuchar la explicación...</p>
+          </div>
+        </div>
+      </section>
+      <!-- SECCIÓN 3: ZONA DE JUEGOS Y RETOS -->
+      <section id="section-games" class="hidden">
+        <div class="bg-slate-50 border border-adepGreen/40 rounded-3xl p-6 md:p-8 shadow-xl max-w-5xl mx-auto text-center adep-glow">
+          <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 flex items-center justify-center gap-2 mb-3">
+            <i class="fa-solid fa-gamepad text-adepGold"></i> Juegos y Retos Tradicionales
+          </h2>
+          <p class="text-base text-slate-600 mb-6">Elige una actividad ampliada para ejercitar la mente:</p>
+
+          <div id="games-menu-container" class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+            <button onclick="switchGameSubTab('roulette')" id="subtab-btn-roulette" class="bg-adepRed text-white p-4 rounded-2xl font-extrabold border-2 border-adepGold shadow flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-dharmachakra text-2xl text-amber-200"></i>
+              <span class="text-sm">Ruleta</span>
+            </button>
+            <button onclick="switchGameSubTab('memory')" id="subtab-btn-memory" class="bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-extrabold border border-slate-300 shadow flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-brain text-2xl text-adepGold"></i>
+              <span class="text-sm">Memoria</span>
+            </button>
+            <button onclick="switchGameSubTab('riddles')" id="subtab-btn-riddles" class="bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-extrabold border border-slate-300 shadow flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-puzzle-piece text-2xl text-adepGold"></i>
+              <span class="text-sm">Adivinanzas</span>
+            </button>
+            <button onclick="switchGameSubTab('quiz')" id="subtab-btn-quiz" class="bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-extrabold border border-slate-300 shadow flex flex-col items-center gap-2 transition">
+              <i class="fa-solid fa-circle-question text-2xl text-adepGold"></i>
+              <span class="text-sm">Trivia (10)</span>
+            </button>
+            <button onclick="switchGameSubTab('story')" id="subtab-btn-story" class="bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-extrabold border border-slate-300 shadow flex flex-col items-center gap-2 transition col-span-2 sm:col-span-1">
+              <i class="fa-solid fa-book-open text-2xl text-adepGold"></i>
+              <span class="text-sm">Cuentos</span>
+            </button>
+          </div>
+
+          <!-- JUEGO RULETA -->
+          <div id="game-sub-roulette" class="bg-white border border-slate-200 p-5 rounded-2xl text-center max-w-xl mx-auto shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-sm text-adepGold font-bold" id="roulette-counter">Ruleta ADEP</span>
+              <button id="roulette-next-btn" onclick="nextRouletteQuestion()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl border border-slate-300 font-bold hidden">Siguiente ➡️</button>
+            </div>
+            <p id="roulette-question" class="text-lg text-slate-900 mb-5 font-bold">Toca el botón para girar la ruleta de preguntas:</p>
+            <div id="roulette-options" class="space-y-3 mb-4">
+              <button onclick="spinRoulette()" class="w-full bg-adepGreen hover:bg-emerald-700 text-white font-extrabold py-4 px-6 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-3">
+                <i class="fa-solid fa-dharmachakra"></i> ¡Girar Ruleta ADEP!
+              </button>
+            </div>
+            <p id="roulette-feedback" class="font-extrabold text-base text-adepGold hidden mt-3"></p>
+          </div>
+
+          <!-- JUEGO MEMORIA -->
+          <div id="game-sub-memory" class="hidden bg-white border border-slate-200 p-5 rounded-2xl text-center max-w-xl mx-auto relative shadow-sm">
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Memoria Tradicional</h3>
+            <p class="text-sm text-slate-600 mb-4">Encuentra las 4 parejas de objetos:</p>
+            
+            <div id="memory-grid" class="grid grid-cols-4 gap-3 max-w-sm mx-auto mb-4">
+              <button onclick="flipMemoryCard(this, 0)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+              <button onclick="flipMemoryCard(this, 1)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+              <button onclick="flipMemoryCard(this, 2)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+              <button onclick="flipMemoryCard(this, 3)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+              <button onclick="flipMemoryCard(this, 4)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+              <button onclick="flipMemoryCard(this, 5)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+              <button onclick="flipMemoryCard(this, 6)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+              <button onclick="flipMemoryCard(this, 7)" class="memory-card bg-slate-100 hover:bg-slate-200 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm">❓</button>
+            </div>
+
+            <p class="text-adepGreen font-bold text-base">Parejas encontradas: <span id="memory-pairs">0</span> / 4</p>
+
+            <div id="memory-win-modal" class="absolute inset-0 bg-white/95 rounded-2xl flex flex-col items-center justify-center p-6 hidden">
+              <i class="fa-solid fa-award text-adepGold text-5xl mb-3 animate-bounce"></i>
+              <h3 class="text-2xl font-extrabold text-slate-900 mb-2">¡Excelente Memoria!</h3>
+              <button onclick="resetMemoryGame()" class="bg-adepGreen hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-bold text-lg shadow mt-2">
+                🔄 Jugar de Nuevo
+              </button>
+            </div>
+          </div>
+
+          <!-- JUEGO ADIVINANZAS -->
+          <div id="game-sub-riddles" class="hidden bg-white border border-slate-200 p-5 rounded-2xl text-center max-w-xl mx-auto shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-sm text-adepGold font-bold">Adivinanza Tradicional</span>
+              <button onclick="loadNextRiddle()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl border border-slate-300 font-bold">Siguiente ➡️</button>
+            </div>
+            <p id="riddle-text" class="text-lg text-slate-900 mb-5 font-bold">Cargando adivinanza...</p>
+            <div id="riddle-options" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+            <p id="riddle-feedback" class="mt-4 font-bold text-base hidden"></p>
+          </div>
+
+          <!-- JUEGO TRIVIA -->
+          <div id="game-sub-quiz" class="hidden bg-white border border-slate-200 p-5 rounded-2xl text-center max-w-xl mx-auto shadow-sm">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-sm text-adepGold font-bold" id="quiz-counter">Pregunta 1 de 10</span>
+              <button onclick="nextQuizQuestion()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-xl border border-slate-300 font-bold">Siguiente ➡️</button>
+            </div>
+            <h3 id="quiz-question" class="text-lg font-bold text-slate-900 mb-4">Cargando pregunta...</h3>
+            <div id="quiz-options" class="grid grid-cols-1 gap-3"></div>
+            <div id="quiz-feedback" class="mt-4 p-4 rounded-xl hidden font-bold text-center text-base"></div>
+          </div>
+
+          <!-- CUENTOS -->
+          <div id="game-sub-story" class="hidden bg-white border border-slate-200 p-5 rounded-2xl text-center max-w-xl mx-auto shadow-sm">
+            <p class="text-sm text-slate-600 mb-4">Elige un tema para escuchar una hermosa historia:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <button onclick="generateStory('educacion')" class="bg-slate-100 hover:bg-adepRed hover:text-white border border-slate-300 text-slate-800 p-3 rounded-xl text-sm font-bold transition">📚 La Maestra</button>
+              <button onclick="generateStory('salud')" class="bg-slate-100 hover:bg-adepGreen hover:text-white border border-slate-300 text-slate-800 p-3 rounded-xl text-sm font-bold transition">🏥 Vitalidad</button>
+              <button onclick="generateStory('amistad')" class="bg-slate-100 hover:bg-adepGold hover:text-white border border-slate-300 text-slate-800 p-3 rounded-xl text-sm font-bold transition">🤝 Amistad</button>
+            </div>
+            <div id="story-content" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-slate-800 text-base text-left min-h-[100px]">
+              Selecciona un tema para comenzar...
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECCIÓN 4: RINCÓN DE PAZ -->
+      <section id="section-bubbles" class="hidden">
+        <div class="bg-slate-50 border border-adepGreen/40 rounded-3xl p-6 sm:p-8 shadow-xl max-w-4xl mx-auto text-center adep-glow">
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2 mb-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-adepGold"></i> Rincón de Paz
+          </h2>
+          <p class="text-base text-slate-600 mb-6">Toca cualquier burbuja para escuchar un pensamiento positivo:</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 my-4">
+            <div onclick="popBubble('La sabiduría de los años es el tesoro más grande de nuestra comunidad. Disfruta de cada día con alegría.')" 
+                 class="float-anim bg-gradient-to-br from-emerald-100 to-teal-100 border-2 border-emerald-400 p-5 rounded-3xl cursor-pointer shadow-lg flex flex-col items-center justify-center h-40 hover:scale-105 transition">
+              <i class="fa-solid fa-seedling text-3xl text-emerald-600 mb-2"></i>
+              <span class="font-extrabold text-slate-900 text-base">Armonía</span>
+              <span class="text-xs text-emerald-700 mt-1 font-semibold">¡Tócame!</span>
+            </div>
+
+            <div onclick="popBubble('La amistad y el compañerismo iluminan nuestros días. En ADEP siempre encontrarás apoyo cálido.')" 
+                 class="float-anim bg-gradient-to-br from-amber-100 to-yellow-100 border-2 border-amber-400 p-5 rounded-3xl cursor-pointer shadow-lg flex flex-col items-center justify-center h-40 hover:scale-105 transition" style="animation-delay: 1s;">
+              <i class="fa-solid fa-sun text-3xl text-amber-600 mb-2"></i>
+              <span class="font-extrabold text-slate-900 text-base">Alegría</span>
+              <span class="text-xs text-amber-700 mt-1 font-semibold">¡Tócame!</span>
+            </div>
+
+            <div onclick="popBubble('Aprender algo nuevo cada día mantiene el espíritu joven y activo. Disfruta a tu propio ritmo.')" 
+                 class="float-anim bg-gradient-to-br from-rose-100 to-red-100 border-2 border-rose-400 p-5 rounded-3xl cursor-pointer shadow-lg flex flex-col items-center justify-center h-40 hover:scale-105 transition" style="animation-delay: 2s;">
+              <i class="fa-solid fa-heart text-3xl text-rose-600 mb-2"></i>
+              <span class="font-extrabold text-slate-900 text-base">Vitalidad</span>
+              <span class="text-xs text-rose-700 mt-1 font-semibold">¡Tócame!</span>
+            </div>
+          </div>
+
+          <div id="bubble-message-box" class="bg-white border border-slate-200 p-5 rounded-2xl min-h-[90px] flex items-center justify-center shadow-sm">
+            <p class="text-slate-500 italic text-base">Toca una burbuja arriba para escuchar...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 5: RECUERDOS -->
+      <section id="section-memories" class="hidden">
+        <div class="bg-slate-50 border border-adepGreen/40 rounded-3xl p-6 shadow-xl max-w-4xl mx-auto text-center adep-glow">
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center justify-center gap-2 mb-2">
+            <i class="fa-solid fa-heart text-adepRed"></i> Galería de Recuerdos
+          </h2>
+          <p class="text-base text-slate-600 mb-5">Toca una opción para escuchar relatos tradicionales:</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+            <button onclick="playMemoryStory('Aulas de Antaño', 'Recordar las aulas de antaño es revivir la vocación y el cariño entregado a la enseñanza en Costa Rica.')" 
+                    class="bg-white hover:bg-adepGreen hover:text-white text-slate-800 border border-slate-300 p-4 rounded-2xl flex flex-col items-center gap-2 transition shadow-sm group">
+              <i class="fa-solid fa-school text-3xl text-adepGold"></i>
+              <h3 class="font-extrabold text-slate-900 group-hover:text-white text-base">Aulas de Antaño</h3>
+            </button>
+
+            <button onclick="playMemoryStory('Café y Amistad', 'El aroma del café chorreado siempre ha sido el punto de reunión perfecto para compartir historias.')" 
+                    class="bg-white hover:bg-adepGreen hover:text-white text-slate-800 border border-slate-300 p-4 rounded-2xl flex flex-col items-center gap-2 transition shadow-sm group">
+              <i class="fa-solid fa-mug-hot text-3xl text-adepGold"></i>
+              <h3 class="font-extrabold text-slate-900 group-hover:text-white text-base">Café y Amistad</h3>
+            </button>
+
+            <button onclick="playMemoryStory('Paseos ADEP', 'Los paseos de la asociación siempre han llenado de aire fresco el corazón de todos los afiliados.')" 
+                    class="bg-white hover:bg-adepGreen hover:text-white text-slate-800 border border-slate-300 p-4 rounded-2xl flex flex-col items-center gap-2 transition shadow-sm group">
+              <i class="fa-solid fa-bus text-3xl text-adepGold"></i>
+              <h3 class="font-extrabold text-slate-900 group-hover:text-white text-base">Paseos ADEP</h3>
+            </button>
+          </div>
+
+          <div id="memory-display" class="bg-white border border-slate-200 p-5 rounded-2xl min-h-[90px] flex items-center justify-center shadow-sm">
+            <p class="text-slate-500 italic text-base">Toca un recuerdo arriba para escuchar...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN 6: SALIDA -->
+      <section id="section-farewell" class="hidden">
+        <div class="bg-slate-50 border-2 border-adepGold rounded-3xl p-8 shadow-xl max-w-4xl mx-auto text-center adep-glow">
+          <i class="fa-solid fa-circle-check text-adepGreen text-6xl mb-4 animate-bounce"></i>
+          <h2 class="text-3xl font-extrabold text-slate-900 mb-3">¡Muchas Gracias por Acompañarnos!</h2>
+          <p class="text-lg text-slate-700 leading-relaxed mb-6">
+            En la <strong>ADEP</strong> siempre estamos para servirte y acompañarte.
+          </p>
+
+          <div class="flex flex-wrap justify-center gap-4 mb-6">
+            <button onclick="celebrateFarewell()" class="bg-adepGreen hover:bg-emerald-700 text-white font-extrabold px-6 py-4 rounded-2xl shadow-xl transition flex items-center gap-2 text-base">
+              🎉 ¡Celebrar!
+            </button>
+            <button onclick="replayPresentation()" class="bg-white hover:bg-slate-100 text-slate-900 font-bold px-6 py-4 rounded-2xl border border-slate-300 shadow transition flex items-center gap-2 text-base">
+              📺 Ver Guía de Inicio
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="bg-slate-100 border-t border-slate-200 py-5 px-4 text-center text-sm text-slate-600 shadow-inner">
+      <p>&copy; Asociación de Educadores Pensionados (ADEP) - Costa Rica.</p>
+    </footer>
+
+  </div>
+
+  <!-- BOTONES FLOTANTES NAVEGACIÓN -->
+  <div id="floating-nav-buttons" class="fixed bottom-4 right-4 z-40 flex gap-2 hidden">
+    <button onclick="reopenPortalModal()" class="bg-adepGold text-slate-900 font-extrabold px-5 py-3.5 rounded-full shadow-2xl flex items-center gap-2 border-2 border-white text-base hover:bg-amber-500 transition">
+      <i class="fa-solid fa-compass text-lg"></i> <span>Ayuda</span>
+    </button>
+    <button onclick="returnToWelcome()" class="bg-adepRed hover:bg-red-700 text-white font-extrabold px-5 py-3.5 rounded-full shadow-2xl flex items-center gap-2 border-2 border-white text-base">
+      <i class="fa-solid fa-house text-lg"></i> <span>Inicio</span>
+    </button>
+  </div>
+
+  <!-- ==================== JAVASCRIPT CODE ==================== -->
+  <script>
+    let userName = "Estimado(a) Afiliado(a)";
+    let presentationTimeout = null;
+
+    /* CONTROLADOR OPTIMIZADO DE VOZ EN TIEMPO REAL AL 100% */
+    let availableVoices = [];
+    let isSpeechEngineReady = false;
+
+    function initSpeechEngine() {
+      if ('speechSynthesis' in window) {
+        const loadVoices = () => {
+          availableVoices = window.speechSynthesis.getVoices();
+          if (availableVoices.length > 0) {
+            isSpeechEngineReady = true;
+          }
+        };
+        loadVoices();
+        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+          window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+      }
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) return;
+
+      window.speechSynthesis.cancel();
+
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        if (availableVoices.length === 0) {
+          availableVoices = window.speechSynthesis.getVoices();
+        }
+
+        const spanishVoice = availableVoices.find(v => v.lang.startsWith('es') || v.lang.includes('ES'));
+        if (spanishVoice) {
+          utterance.voice = spanishVoice;
+        }
+
+        utterance.lang = 'es-CR';
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+
+        window.speechSynthesis.speak(utterance);
+      }, 20);
+    }
+
+    function stopAudio() {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      if (presentationTimeout) clearTimeout(presentationTimeout);
+      triggerHaptic();
+    }
+
+    function saveUserName() {
+      const inputVal = document.getElementById('user-name-input').value.trim();
+      if (inputVal) userName = inputVal;
+
+      document.getElementById('header-user-greeting').innerText = "Hola, " + userName + " • ADEP";
+      document.getElementById('welcome-modal').classList.add('hidden');
+      document.getElementById('app-main-content').classList.add('hidden');
+      document.getElementById('floating-nav-buttons').classList.add('hidden');
+      document.getElementById('presentation-modal').classList.remove('hidden');
+
+      triggerHaptic();
+      
+      speakText("¡Bienvenido " + userName + "! Explora esta guía breve antes de iniciar.");
+      
+      presentationTimeout = setTimeout(() => {
+        switchPortalTab(1);
+      }, 4500); 
+    }
+
+    function switchPortalTab(tabNum) {
+      stopAudio();
+      triggerHaptic();
+
+      for (let i = 1; i <= 4; i++) {
+        const pane = document.getElementById('portal-pane-' + i);
+        if (pane) pane.classList.add('hidden');
+        const btn = document.getElementById('portal-btn-' + i);
+        if (btn) btn.className = "portal-tab bg-white hover:bg-slate-100 text-slate-800 p-4 rounded-2xl font-bold border border-slate-300 text-sm sm:text-base flex flex-col items-center gap-2 shadow";
+      }
+
+      const activePane = document.getElementById('portal-pane-' + tabNum);
+      if (activePane) activePane.classList.remove('hidden');
+
+      const activeBtn = document.getElementById('portal-btn-' + tabNum);
+      if (activeBtn) activeBtn.className = "portal-tab bg-adepGreen text-white p-4 rounded-2xl font-extrabold border-2 border-adepGold text-sm sm:text-base flex flex-col items-center gap-2 shadow scale-105";
+
+      let portalSpeechTexts = {
+        1: "Inteligencia Artificial Sencilla. La IA es un asistente digital amigable. Funciona como un consejero educado listo para conversar contigo, buscar recetas de cocina, responder preguntas o leer historias sin esforzar la vista.",
+        2: "Espacio 100 por ciento seguro. La aplicación nunca te pedirá números de tarjeta ni datos financieros. Tus consultas son completamente privadas y seguras.",
+        3: "Salud y mente activa. Disfruta de juegos de memoria, adivinanzas tradicionales de Costa Rica y reflexiones para ejercitar la mente de forma divertida.",
+        4: "Personajes interactivos 3D. Elige a tu compañero favorito para interactuar en pantalla: Robot, Búho Sabio o Estrella."
+      };
+
+      speakText(portalSpeechTexts[tabNum] || ("Pestaña " + tabNum + " seleccionada."));
+    }
+
+    function closePresentation() {
+      stopAudio();
+      triggerHaptic();
+      document.getElementById('presentation-modal').classList.add('hidden');
+      document.getElementById('app-main-content').classList.remove('hidden');
+      document.getElementById('floating-nav-buttons').classList.remove('hidden');
+      
+      if (renderer3D && camera3D) setTimeout(onWindowResize, 100);
+      speakText("Ya puedes interactuar con tu aplicación ADEP.");
+    }
+
+    function reopenPortalModal() {
+      stopAudio();
+      triggerHaptic();
+      document.getElementById('app-main-content').classList.add('hidden');
+      document.getElementById('floating-nav-buttons').classList.add('hidden');
+      document.getElementById('presentation-modal').classList.remove('hidden');
+      switchPortalTab(1);
+    }
+
+    function returnToWelcome() {
+      stopAudio();
+      triggerHaptic();
+      document.getElementById('presentation-modal').classList.add('hidden');
+      document.getElementById('app-main-content').classList.add('hidden');
+      document.getElementById('floating-nav-buttons').classList.add('hidden');
+      document.getElementById('welcome-modal').classList.remove('hidden');
+      speakText("Has vuelto al inicio.");
+    }
+
+    function celebrateFarewell() {
+      stopAudio();
+      triggerHaptic();
+      confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      speakText("¡Muchas gracias por acompañarnos en la ADEP!");
+    }
+
+    function replayPresentation() {
+      switchTab('home');
+      reopenPortalModal();
+    }
+
+    function explainConcept(title, desc) {
+      stopAudio();
+      triggerHaptic();
+      document.getElementById('concept-display').innerHTML = `<p class="text-slate-900 text-lg font-bold">✨ <strong>${title}:</strong> ${desc}</p>`;
+      speakText(desc);
+    }
+
+    function triggerHaptic() {
+      if ('vibrate' in navigator) navigator.vibrate(50);
+    }
+
+    function toggleHighContrast() {
+      document.body.classList.toggle('high-contrast');
+      triggerHaptic();
+    }
+
+    function switchTab(tabId) {
+      stopAudio();
+      triggerHaptic();
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-adepRed', 'text-white');
+        btn.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+      });
+
+      document.getElementById('section-' + tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+        activeBtn.classList.add('bg-adepRed', 'text-white');
+      }
+
+      if (tabId === 'home' && renderer3D && camera3D) onWindowResize();
+      if (tabId === 'farewell') celebrateFarewell();
+      updateBackgroundMode(tabId);
+    }
+
+    function switchGameSubTab(subId) {
+      stopAudio();
+      triggerHaptic();
+      const subs = ['roulette', 'memory', 'riddles', 'quiz', 'story'];
+      subs.forEach(s => {
+        document.getElementById('game-sub-' + s).classList.add('hidden');
+        document.getElementById('subtab-btn-' + s).className = "bg-white text-slate-800 p-4 rounded-2xl font-bold border border-slate-300 shadow flex flex-col items-center gap-2 hover:bg-slate-100 transition";
+      });
+
+      document.getElementById('game-sub-' + subId).classList.remove('hidden');
+      document.getElementById('subtab-btn-' + subId).className = "bg-adepRed text-white p-4 rounded-2xl font-extrabold border-2 border-adepGold shadow-lg flex flex-col items-center gap-2";
+      
+      if(subId === 'riddles') {
+        renderCurrentRiddle();
+        speakText(riddlesData[currentRiddleIndex].text);
+      }
+      if(subId === 'quiz') {
+        loadQuizQuestion();
+      }
+      if(subId === 'roulette') {
+        currentRouletteIndex = 0;
+        document.getElementById('roulette-question').innerText = "Toca el botón para girar la ruleta de preguntas:";
+        document.getElementById('roulette-counter').innerText = "Ruleta ADEP";
+        document.getElementById('roulette-next-btn').classList.add('hidden');
+        document.getElementById('roulette-options').innerHTML = `<button onclick="spinRoulette()" class="w-full bg-adepGreen hover:bg-emerald-700 text-white font-extrabold py-4 px-6 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-3"><i class="fa-solid fa-dharmachakra"></i> ¡Girar Ruleta ADEP!</button>`;
+        document.getElementById('roulette-feedback').classList.add('hidden');
+      }
+    }
+
+    function askPresetQuestion(questionText) {
+      stopAudio();
+      triggerHaptic();
+      let reply = "Comprendo tu consulta, " + userName + ". Te saluda tu asistente ADEP.";
+
+      if (questionText.includes("ADEP")) {
+        reply = "La Asociación de Educadores Pensionados (ADEP) vela por el bienestar social, económico y cultural de sus afiliados.";
+      } else if (questionText.includes("salud")) {
+        reply = "Para cuidar tu bienestar, " + userName + ", recuerda beber agua, hacer caminatas suaves y disfrutar de la lectura.";
+      } else if (questionText.includes("paseos")) {
+        reply = "ADEP organiza talleres, charlas y paseos recreativos maravillosos para compartir entre amigos.";
+      } else if (questionText.includes("seguridad") || questionText.includes("datos")) {
+        reply = "Para mantener tus datos seguros en internet, " + userName + ", recuerda nunca compartir contraseñas personales, números de cuentas bancarias ni claves secretas por ningún enlace sospechoso.";
+      }
+
+      const chatBox = document.getElementById('chat-box');
+      chatBox.innerHTML += `
+        <div class="bg-adepGreen/20 border border-adepGreen/40 rounded-2xl p-3 max-w-[90%] ml-auto text-right shadow-sm">
+          <p class="text-xs font-bold text-adepGreen mb-1">Preguntaste:</p>
+          <p class="text-base text-slate-900">"${questionText}"</p>
+        </div>
+        <div class="bg-white border border-slate-300 rounded-2xl p-4 max-w-[95%] shadow-sm">
+          <p class="text-sm font-bold text-adepGold mb-1"><i class="fa-solid fa-robot"></i> Asistente ADEP:</p>
+          <p class="text-base text-slate-800">${reply}</p>
+        </div>
+      `;
+      chatBox.scrollTop = chatBox.scrollHeight;
+      speakText(reply);
+    }
+
+    /* RULETA DE PREGUNTAS */
+    const rouletteQuestions = [
+      { q: "¿Cuál es una excelente manera de empezar el día con vitalidad?", opts: ["Tomar café chorreado y caminar", "Quedarse en cama todo el día", "Saltarse el desayuno"], c: 0, exp: "¡Excelente! Un buen cafecito y una caminata suave llenan de energía." },
+      { q: "¿Qué promueve la ADEP principalmente?", opts: ["Compañerismo, salud y bienestar", "Aislarse de los demás", "Preocuparse en exceso"], c: 0, exp: "¡Correcto! El compañerismo y el apoyo mutuo son nuestro objetivo." },
+      { q: "¿Cuál es un hábito excelente para mantener la mente activa?", opts: ["Leer libros y hacer juegos de memoria", "Evitar conversar con amigos", "No aprender nada nuevo"], c: 0, exp: "¡Muy bien! Leer y ejercitar la mente mantiene nuestro cerebro saludable." }
+    ];
+
+    let currentRouletteIndex = 0;
+
+    function renderCurrentRoulette() {
+      const item = rouletteQuestions[currentRouletteIndex];
+      document.getElementById('roulette-question').innerText = item.q;
+      document.getElementById('roulette-counter').innerText = `Ruleta ${currentRouletteIndex + 1} de ${rouletteQuestions.length}`;
+      document.getElementById('roulette-next-btn').classList.remove('hidden');
+      const optContainer = document.getElementById('roulette-options');
+      optContainer.innerHTML = '';
+      document.getElementById('roulette-feedback').classList.add('hidden');
+      
+      item.opts.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left bg-slate-100 hover:bg-adepGreen hover:text-white text-slate-800 p-4 rounded-xl border border-slate-300 font-bold text-base transition shadow-sm";
+        btn.innerText = opt;
+        btn.onclick = () => {
+          stopAudio();
+          triggerHaptic();
+          const fb = document.getElementById('roulette-feedback');
+          fb.classList.remove('hidden');
+          if (idx === item.c) {
+            fb.className = "font-extrabold text-base text-emerald-700 mt-3";
+            fb.innerText = item.exp;
+            confetti({ particleCount: 40, spread: 50 });
+            speakText(item.exp);
+          } else {
+            fb.className = "font-extrabold text-base text-rose-700 mt-3";
+            fb.innerText = "¡Casi! Inténtalo de nuevo.";
+            speakText("¡Casi! Inténtalo de nuevo.");
+          }
+        };
+        optContainer.appendChild(btn);
+      });
+    }
+
+    function spinRoulette() {
+      stopAudio();
+      triggerHaptic();
+      currentRouletteIndex = 0;
+      renderCurrentRoulette();
+      speakText(rouletteQuestions[currentRouletteIndex].q);
+    }
+
+    function nextRouletteQuestion() {
+      stopAudio();
+      triggerHaptic();
+      currentRouletteIndex = (currentRouletteIndex + 1) % rouletteQuestions.length;
+      renderCurrentRoulette();
+      speakText(rouletteQuestions[currentRouletteIndex].q);
+    }
+
+    /* ADIVINANZAS */
+    const riddlesData = [
+      { text: '"Blanco por dentro, verde por fuera; si quieres que te lo diga, espera."', opts: [{t: "El Café", c: false}, {t: "La Pera", c: true}, {t: "El Boyero", c: false}], exp: "¡Correcto! Es la pera." },
+      { text: '"Oro parece, plata no es; el que no lo adivine, bien tonto es."', opts: [{t: "El Banano", c: true}, {t: "La Piña", c: false}, {t: "El Melón", c: false}], exp: "¡Excelente! Es el banano." },
+      { text: '"Tiene hojitas y no es planta, habla y no tiene voz."', opts: [{t: "El Libro", c: true}, {t: "La Radio", c: false}, {t: "La Mesa", c: false}], exp: "¡Muy bien! Es el libro." }
+    ];
+
+    let currentRiddleIndex = 0;
+
+    function renderCurrentRiddle() {
+      const item = riddlesData[currentRiddleIndex];
+      document.getElementById('riddle-text').innerText = item.text;
+      const container = document.getElementById('riddle-options');
+      container.innerHTML = '';
+      document.getElementById('riddle-feedback').classList.add('hidden');
+
+      item.opts.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "bg-slate-100 hover:bg-slate-200 text-slate-800 p-4 rounded-xl border border-slate-300 font-bold text-base transition shadow-sm";
+        btn.innerText = opt.t;
+        btn.onclick = () => {
+          stopAudio();
+          triggerHaptic();
+          const fb = document.getElementById('riddle-feedback');
+          fb.classList.remove('hidden');
+          if (opt.c) {
+            fb.className = "mt-3 font-extrabold text-base text-emerald-700";
+            fb.innerText = item.exp;
+            confetti({ particleCount: 35, spread: 50 });
+            speakText(item.exp);
+          } else {
+            fb.className = "mt-3 font-extrabold text-base text-rose-700";
+            fb.innerText = "¡Prueba de nuevo!";
+            speakText("Prueba de nuevo.");
+          }
+        };
+        container.appendChild(btn);
+      });
+    }
+
+    function loadNextRiddle() {
+      stopAudio();
+      triggerHaptic();
+      currentRiddleIndex = (currentRiddleIndex + 1) % riddlesData.length;
+      renderCurrentRiddle();
+      speakText(riddlesData[currentRiddleIndex].text);
+    }
+
+    /* MEMORIA (4 PAREJAS) */
+    const memoryCardsData = ['☕', '📚', '🕊️', '🌸', '☕', '📚', '🕊️', '🌸'];
+    let shuffledCards = [...memoryCardsData].sort(() => Math.random() - 0.5);
+    let firstCard = null, secondCard = null, lockBoard = false, matchedPairs = 0;
+
+    function flipMemoryCard(btn, index) {
+      if (lockBoard || btn.classList.contains('matched') || btn.innerText !== '❓') return;
+      stopAudio();
+      triggerHaptic();
+      
+      btn.innerText = shuffledCards[index];
+      btn.className = "memory-card bg-white h-20 rounded-2xl border-2 border-adepGold text-3xl font-bold text-adepGold flex items-center justify-center scale-105 shadow-md";
+
+      if (!firstCard) {
+        firstCard = { btn, index };
+        return;
+      }
+
+      secondCard = { btn, index };
+      lockBoard = true;
+
+      if (shuffledCards[firstCard.index] === shuffledCards[secondCard.index]) {
+        firstCard.btn.classList.add('matched');
+        secondCard.btn.classList.add('matched');
+        matchedPairs++;
+        document.getElementById('memory-pairs').innerText = matchedPairs;
+        confetti({ particleCount: 25, spread: 40 });
+        speakText("¡Pareja encontrada!");
+        resetMemoryTurn();
+
+        if (matchedPairs === 4) {
+          document.getElementById('memory-win-modal').classList.remove('hidden');
+          confetti({ particleCount: 80, spread: 90 });
+          speakText("¡Felicidades! Completaste el juego de memoria.");
+        }
+      } else {
+        setTimeout(() => {
+          firstCard.btn.innerText = '❓';
+          firstCard.btn.className = "memory-card bg-slate-100 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm";
+          secondCard.btn.innerText = '❓';
+          secondCard.btn.className = "memory-card bg-slate-100 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm";
+          resetMemoryTurn();
+        }, 1000);
+      }
+    }
+
+    function resetMemoryTurn() {
+      firstCard = null; secondCard = null; lockBoard = false;
+    }
+
+    function resetMemoryGame() {
+      stopAudio();
+      triggerHaptic();
+      shuffledCards = [...memoryCardsData].sort(() => Math.random() - 0.5);
+      matchedPairs = 0;
+      document.getElementById('memory-pairs').innerText = "0";
+      document.getElementById('memory-win-modal').classList.add('hidden');
+      document.querySelectorAll('.memory-card').forEach(btn => {
+        btn.innerText = '❓';
+        btn.className = "memory-card bg-slate-100 h-20 rounded-2xl border-2 border-slate-300 text-3xl font-bold text-adepGold flex items-center justify-center shadow-sm";
+        btn.classList.remove('matched');
+      });
+    }
+
+    /* TRIVIA (10 PREGUNTAS) */
+    const quizQuestions = [
+      { q: "1. ¿Qué es fundamental para mantener una buena salud a diario?", options: ["Dormir bien, caminar y beber agua.", "Ver televisión toda la madrugada.", "No realizar actividad física."], correct: 0, exp: "¡Correcto! El descanso y la caminata suave son esenciales." },
+      { q: "2. ¿Cuál es el objetivo principal de la Asociación de Educadores Pensionados (ADEP)?", options: ["Velar por el bienestar social y cultural de sus afiliados", "Vender artículos deportivos", "Organizar vuelos espaciales"], correct: 0, exp: "¡Exacto! El bienestar de nuestros afiliados es primordial." },
+      { q: "3. ¿Qué bebida tradicional costarricense es muy popular para compartir?", options: ["Café chorreado", "Sodas gaseosas extremas", "Bebidas congeladas"], correct: 0, exp: "¡Así es! Un buen café chorreado une a los amigos." },
+      { q: "4. ¿Qué hábito ayuda a mantener la mente ágil y joven?", options: ["Leer y aprender cosas nuevas cada día", "Pasar todo el día sin hablar", "Evitar cualquier lectura"], correct: 0, exp: "¡Correcto! Mantenerse curioso estimula la mente." },
+      { q: "5. ¿Cuál es una medida de seguridad digital importante?", options: ["Nunca compartir claves ni datos bancarios", "Dar las contraseñas a desconocidos", "Anotar claves en lugares públicos"], correct: 0, exp: "¡Muy bien! La seguridad digital protege tu privacidad." },
+      { q: "6. ¿Qué flor es símbolo nacional de Costa Rica?", options: ["La Guaria Morada", "La Rosa Roja", "El Girasol"], correct: 0, exp: "¡Correcto! Nuestra hermosa Guaria Morada." },
+      { q: "7. ¿Cómo se le llama cariñosamente a los costarricenses?", options: ["Ticos", "Nativos", "Amigos del norte"], correct: 0, exp: "¡Exacto! Con mucho orgullo somos ticos." },
+      { q: "8. ¿Qué actividad física moderada es excelente?", options: ["Caminatas suaves al aire libre", "Levantar pesas extremas sin descanso", "Correr maratones de noche"], correct: 0, exp: "¡Muy bien! Las caminatas oxigenan el cuerpo." },
+      { q: "9. ¿Qué se fomenta en los talleres y paseos de la ADEP?", options: ["El compañerismo y la alegría compartida", "El aislamiento social", "La competencia estricta"], correct: 0, exp: "¡Correcto! El compañerismo es nuestro pilar." },
+      { q: "10. ¿Qué representa la tecnología accesible en esta aplicación?", options: ["Un apoyo amigable y fácil de usar", "Un examen difícil", "Una complicación innecesaria"], correct: 0, exp: "¡Excelente! Está diseñada para servirte con cariño." }
+    ];
+
+    let currentQuizIndex = 0;
+
+    function loadQuizQuestion() {
+      const q = quizQuestions[currentQuizIndex];
+      document.getElementById('quiz-counter').innerText = `Pregunta ${currentQuizIndex + 1} de ${quizQuestions.length}`;
+      document.getElementById('quiz-question').innerText = q.q;
+      const optsContainer = document.getElementById('quiz-options');
+      optsContainer.innerHTML = '';
+      document.getElementById('quiz-feedback').classList.add('hidden');
+
+      q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = "text-left bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 p-4 rounded-xl font-bold text-base transition shadow-sm";
+        btn.innerText = opt;
+        btn.onclick = () => {
+          stopAudio();
+          triggerHaptic();
+          const fb = document.getElementById('quiz-feedback');
+          fb.classList.remove('hidden');
+          if (idx === q.correct) {
+            fb.className = "mt-4 p-4 rounded-xl font-bold text-center bg-emerald-100 text-emerald-800 border border-emerald-300 text-base shadow-sm";
+            fb.innerText = q.exp;
+            confetti({ particleCount: 30, spread: 40 });
+            speakText(q.exp);
+          } else {
+            fb.className = "mt-4 p-4 rounded-xl font-bold text-center bg-rose-100 text-rose-800 border border-rose-300 text-base shadow-sm";
+            fb.innerText = "Inténtalo nuevamente.";
+            speakText("Inténtalo nuevamente.");
+          }
+        };
+        optsContainer.appendChild(btn);
+      });
+      speakText(q.q);
+    }
+
+    function nextQuizQuestion() {
+      currentQuizIndex = (currentQuizIndex + 1) % quizQuestions.length;
+      loadQuizQuestion();
+    }
+
+    /* CUENTOS */
+    function generateStory(topic) {
+      stopAudio();
+      triggerHaptic();
+      const storyDisplay = document.getElementById('story-content');
+      let title = "", body = "";
+
+      if (topic === 'educacion') {
+        title = "El Legado de la Maestra Carmen";
+        body = "Doña Carmen dedicó más de treinta años a enseñar con amor en una escuelita rural de Costa Rica. Cada mañana recibía a sus alumnos con una sonrisa y una lección de vida. Años después, gracias a la tecnología accesible y a la ADEP, logró reencontrarse con muchos de ellos por medio de videollamadas.";
+      } else if (topic === 'salud') {
+        title = "El Despertar de la Vitalidad";
+        body = "Don Luis solía pensar que los años restaban energía, hasta que un día decidió unirse a los caminantes matutinos de la asociación. Al principio dio solo unos pasos, pero el aire fresco de la mañana, el canto de los pájaros y la compañía de buenos amigos transformaron su rutina.";
+      } else {
+        title = "Tardes de Café y Amistad";
+        body = "Bajo la sombra de un viejo árbol de mango, rodeados del aroma inconfundible del café chorreado, un grupo de entrañables amigos se reunía todas las semanas para compartir anécdotas, risas y consejos. En la ADEP encontraron el espacio perfecto para seguir compartiendo.";
+      }
+
+      storyDisplay.innerHTML = `<p class="text-slate-900 leading-relaxed font-medium">📖 <strong>${title}:</strong><br><br>${body}</p>`;
+      speakText(title + ". " + body);
+    }
+
+    /* 3D Y ACCIONES */
+    let scene3D, camera3D, renderer3D;
+    let mascotGroup, leftArmGroup, rightArmGroup, coreStarMesh, starMaterialRef;
+    let leftOwlWing, rightOwlWing;
+    let isActionActive = false, isCelebrating = false, isCentering = false;
+    let currentMascotType = 'robot';
+
+    function init3DMascot() {
+      const container = document.getElementById('robot-container');
+      if (!container) return;
+      
+      const width = container.clientWidth || 300;
+      const height = container.clientHeight || 280;
+
+      scene3D = new THREE.Scene();
+      camera3D = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera3D.position.set(0, 1.3, 5.5);
+
+      renderer3D = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer3D.setSize(width, height);
+      renderer3D.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      
+      container.appendChild(renderer3D.domElement);
+
+      scene3D.add(new THREE.AmbientLight(0xffffff, 1.2));
+      const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.5);
+      dirLight1.position.set(5, 10, 7);
+      scene3D.add(dirLight1);
+
+      const dirLight2 = new THREE.DirectionalLight(0x008751, 1.0);
+      dirLight2.position.set(-5, -5, -5);
+      scene3D.add(dirLight2);
+
+      buildRealisticMascot('robot');
+
+      let isDragging = false, previousMouseX = 0, previousMouseY = 0;
+      container.addEventListener('mousedown', (e) => { isDragging = true; previousMouseX = e.clientX; previousMouseY = e.clientY; });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+      container.addEventListener('mousemove', (e) => {
+        if (isDragging && mascotGroup) {
+          mascotGroup.rotation.y += (e.clientX - previousMouseX) * 0.01;
+          mascotGroup.rotation.x += (e.clientY - previousMouseY) * 0.01;
+          previousMouseX = e.clientX; previousMouseY = e.clientY;
+        }
+      });
+
+      container.addEventListener('touchstart', (e) => { isDragging = true; previousMouseX = e.touches[0].clientX; previousMouseY = e.touches[0].clientY; });
+      window.addEventListener('touchend', () => { isDragging = false; });
+      container.addEventListener('touchmove', (e) => {
+        if (isDragging && mascotGroup) {
+          mascotGroup.rotation.y += (e.touches[0].clientX - previousMouseX) * 0.01;
+          mascotGroup.rotation.x += (e.touches[0].clientY - previousMouseY) * 0.01;
+          previousMouseX = e.touches[0].clientX; previousMouseY = e.touches[0].clientY;
+        }
+      });
+
+      animate3DMascot();
+    }
+
+    function setMascot(type) {
+      stopAudio();
+      triggerHaptic();
+      currentMascotType = type;
+      isActionActive = false; isCelebrating = false; isCentering = false;
+
+      document.getElementById('btn-mascot-robot').className = type === 'robot' ? "bg-adepRed text-white py-3 px-2 rounded-2xl font-extrabold text-sm border-2 border-adepGold shadow flex flex-col items-center gap-1 transition" : "bg-white text-slate-800 hover:bg-slate-100 py-3 px-2 rounded-2xl font-extrabold text-sm border border-slate-300 shadow flex flex-col items-center gap-1 transition";
+      document.getElementById('btn-mascot-owl').className = type === 'owl' ? "bg-adepRed text-white py-3 px-2 rounded-2xl font-extrabold text-sm border-2 border-adepGold shadow flex flex-col items-center gap-1 transition" : "bg-white text-slate-800 hover:bg-slate-100 py-3 px-2 rounded-2xl font-extrabold text-sm border border-slate-300 shadow flex flex-col items-center gap-1 transition";
+      document.getElementById('btn-mascot-star').className = type === 'star' ? "bg-adepRed text-white py-3 px-2 rounded-2xl font-extrabold text-sm border-2 border-adepGold shadow flex flex-col items-center gap-1 transition" : "bg-white text-slate-800 hover:bg-slate-100 py-3 px-2 rounded-2xl font-extrabold text-sm border border-slate-300 shadow flex flex-col items-center gap-1 transition";
+
+      if (type === 'robot') {
+        document.getElementById('label-btn-1').innerText = "Saludar";
+        document.getElementById('label-btn-2').innerText = "Celebrar";
+        speakText("¡Hola " + userName + "! Soy tu robot amigable.");
+      } else if (type === 'owl') {
+        document.getElementById('label-btn-1').innerText = "Hoo-Hoo";
+        document.getElementById('label-btn-2').innerText = "Volar";
+        speakText("¡Hoo hoo! Soy tu búho sabio.");
+      } else {
+        document.getElementById('label-btn-1').innerText = "Magia Luz";
+        document.getElementById('label-btn-2').innerText = "Girar";
+        speakText("¡Hola " + userName + "! Soy tu estrella brillante.");
+      }
+
+      if (mascotGroup) scene3D.remove(mascotGroup);
+      buildRealisticMascot(type);
+    }
+
+    function buildRealisticMascot(type) {
+      mascotGroup = new THREE.Group();
+      const matRed = new THREE.MeshPhysicalMaterial({ color: 0xC8102E, roughness: 0.2, metalness: 0.3, clearcoat: 1.0 });
+      const matGreen = new THREE.MeshPhysicalMaterial({ color: 0x008751, roughness: 0.3, metalness: 0.2 });
+      const matGold = new THREE.MeshPhysicalMaterial({ color: 0xD4AF37, roughness: 0.1, metalness: 0.8, clearcoat: 0.8 });
+      const matWhite = new THREE.MeshPhysicalMaterial({ color: 0xF8FAFC, roughness: 0.4 });
+      const matVisor = new THREE.MeshPhysicalMaterial({ color: 0x0EA5E9, roughness: 0.1, transmission: 0.6, opacity: 0.9, transparent: true });
+      const matBrown = new THREE.MeshPhysicalMaterial({ color: 0x854D0E, roughness: 0.6 });
+      const matOrange = new THREE.MeshPhysicalMaterial({ color: 0xF97316, roughness: 0.4 });
+
+      if (type === 'robot') {
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.4, 1.1, 32), matRed);
+        torso.position.y = 0.55; mascotGroup.add(torso);
+        const emblem = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.05, 32), matGold);
+        emblem.rotation.x = Math.PI / 2; emblem.position.set(0, 0.55, 0.41); mascotGroup.add(emblem);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.55, 0.55), matWhite);
+        head.position.y = 1.35; mascotGroup.add(head);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.15), matVisor);
+        visor.position.set(0, 1.38, 0.28); mascotGroup.add(visor);
+        const antStick = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3), matGold);
+        antStick.position.set(0, 1.8, 0); mascotGroup.add(antStick);
+        const antBall = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16), matGold);
+        antBall.position.set(0, 1.95, 0); mascotGroup.add(antBall);
+
+        const armGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.6);
+        leftArmGroup = new THREE.Group(); leftArmGroup.position.set(-0.6, 0.9, 0);
+        const lArm = new THREE.Mesh(armGeo, matGreen); lArm.position.y = -0.25; leftArmGroup.add(lArm);
+        mascotGroup.add(leftArmGroup);
+
+        rightArmGroup = new THREE.Group(); rightArmGroup.position.set(0.6, 0.9, 0);
+        const rArm = new THREE.Mesh(armGeo, matGreen); rArm.position.y = -0.25; rightArmGroup.add(rArm);
+        mascotGroup.add(rightArmGroup);
+      } else if (type === 'owl') {
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.7, 32, 32), matBrown);
+        body.position.y = 0.75; mascotGroup.add(body);
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.48, 32, 32), matWhite);
+        belly.position.set(0, 0.65, 0.32); mascotGroup.add(belly);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.52, 32, 32), matBrown);
+        head.position.y = 1.4; mascotGroup.add(head);
+        const eyeGeo = new THREE.SphereGeometry(0.16, 32, 32);
+        const eyeLeft = new THREE.Mesh(eyeGeo, matGold); eyeLeft.position.set(-0.18, 1.45, 0.4);
+        const eyeRight = new THREE.Mesh(eyeGeo, matGold); eyeRight.position.set(0.18, 1.45, 0.4);
+        mascotGroup.add(eyeLeft); mascotGroup.add(eyeRight);
+        const beak = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.18, 16), matOrange);
+        beak.rotation.x = Math.PI / 2; beak.position.set(0, 1.35, 0.48); mascotGroup.add(beak);
+
+        const wingGeo = new THREE.BoxGeometry(0.15, 0.6, 0.4);
+        leftOwlWing = new THREE.Group(); leftOwlWing.position.set(-0.7, 0.75, 0);
+        const lWingMesh = new THREE.Mesh(wingGeo, matBrown); lWingMesh.position.y = -0.2; leftOwlWing.add(lWingMesh);
+        mascotGroup.add(leftOwlWing);
+
+        rightOwlWing = new THREE.Group(); rightOwlWing.position.set(0.7, 0.75, 0);
+        const rWingMesh = new THREE.Mesh(wingGeo, matBrown); rWingMesh.position.y = -0.2; rightOwlWing.add(rWingMesh);
+        mascotGroup.add(rightOwlWing);
+      } else {
+        starMaterialRef = matGold.clone();
+        coreStarMesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.85, 0), starMaterialRef);
+        coreStarMesh.position.y = 1.0; mascotGroup.add(coreStarMesh);
+        const ringGeo = new THREE.TorusGeometry(1.15, 0.05, 16, 100);
+        const ring = new THREE.Mesh(ringGeo, matGreen);
+        ring.position.y = 1.0; ring.rotation.x = Math.PI / 2; mascotGroup.add(ring);
+      }
+      scene3D.add(mascotGroup);
+    }
+
+    let clock3D = new THREE.Clock();
+
+    function animate3DMascot() {
+      requestAnimationFrame(animate3DMascot);
+      const elapsedTime = clock3D.getElapsedTime();
+      if (mascotGroup) {
+        if (!isCelebrating) {
+          mascotGroup.position.y = Math.sin(elapsedTime * 2) * 0.12;
+        }
+
+        if (isCentering) {
+          mascotGroup.rotation.y += (0 - mascotGroup.rotation.y) * 0.15;
+          mascotGroup.rotation.x += (0 - mascotGroup.rotation.x) * 0.15;
+          mascotGroup.rotation.z += (0 - mascotGroup.rotation.z) * 0.15;
+          if (coreStarMesh) {
+            coreStarMesh.rotation.y += (0 - coreStarMesh.rotation.y) * 0.15;
+            coreStarMesh.rotation.z += (0 - coreStarMesh.rotation.z) * 0.15;
+          }
+          if (Math.abs(mascotGroup.rotation.y) < 0.01 && Math.abs(mascotGroup.rotation.x) < 0.01) { 
+            mascotGroup.rotation.set(0, 0, 0); 
+            if (coreStarMesh) coreStarMesh.rotation.set(0, 0, 0);
+            isCentering = false; 
+          }
+        }
+
+        if (isActionActive) {
+          if (currentMascotType === 'robot' && rightArmGroup) {
+            rightArmGroup.rotation.z = Math.PI / 1.5 + Math.sin(elapsedTime * 12) * 0.5;
+            mascotGroup.rotation.y += 0.05;
+          } else if (currentMascotType === 'owl') {
+            mascotGroup.position.y += Math.sin(elapsedTime * 20) * 0.05;
+          } else if (currentMascotType === 'star' && coreStarMesh && starMaterialRef) {
+            const glowFactor = (Math.sin(elapsedTime * 18) + 1) * 0.5;
+            starMaterialRef.emissive.setHex(0xFFFF00);
+            starMaterialRef.emissiveIntensity = 0.5 + glowFactor * 1.5;
+            coreStarMesh.rotation.y += 0.08;
+            coreStarMesh.rotation.z += 0.05;
+          }
+        } else {
+          if (starMaterialRef) {
+            starMaterialRef.emissive.setHex(0x000000);
+            starMaterialRef.emissiveIntensity = 0;
+          }
+        }
+
+        if (isCelebrating) {
+          if (currentMascotType === 'owl' && leftOwlWing && rightOwlWing) {
+            leftOwlWing.rotation.z = Math.sin(elapsedTime * 25) * 0.8;
+            rightOwlWing.rotation.z = -Math.sin(elapsedTime * 25) * 0.8;
+            mascotGroup.position.y = 0.5 + Math.abs(Math.sin(elapsedTime * 10)) * 0.8;
+          } else if (currentMascotType === 'star') {
+            mascotGroup.rotation.y += 0.15;
+          } else if (currentMascotType === 'robot') {
+            mascotGroup.position.y = Math.abs(Math.sin(elapsedTime * 15)) * 0.4;
+            mascotGroup.rotation.y += 0.05;
+          }
+        } else {
+          if (rightArmGroup) rightArmGroup.rotation.z = 0;
+          if (leftArmGroup) leftArmGroup.rotation.z = 0;
+          if (leftOwlWing) leftOwlWing.rotation.z = 0;
+          if (rightOwlWing) rightOwlWing.rotation.z = 0;
+        }
+      }
+      renderer3D.render(scene3D, camera3D);
+    }
+
+    function actionMascotPrimary() {
+      stopAudio(); triggerHaptic(); isActionActive = true; isCelebrating = false; isCentering = false;
+      setTimeout(() => { 
+        isActionActive = false; 
+        if(currentMascotType === 'star' && starMaterialRef) {
+          starMaterialRef.emissive.setHex(0x000000);
+          starMaterialRef.emissiveIntensity = 0;
+        }
+      }, 2500);
+
+      if (currentMascotType === 'robot') {
+        speakText("¡Hola " + userName + "! Qué gusto saludarte.");
+      } else if (currentMascotType === 'owl') {
+        speakText("¡Hoo-hoo! ¡Hoo-hoo!");
+      } else if (currentMascotType === 'star') {
+        speakText("¡Magia luz! Brillando con energía para ti.");
+      }
+    }
+
+    function actionMascotSecondary() {
+      stopAudio(); triggerHaptic(); isCelebrating = true; isActionActive = false; isCentering = false;
+      setTimeout(() => { isCelebrating = false; }, 3000);
+
+      if (currentMascotType === 'robot') {
+        speakText("¡Celebrando la alegría de estar juntos en ADEP!");
+      } else if (currentMascotType === 'owl') {
+        speakText("¡Alzando vuelo hacia nuevas aventuras!");
+      } else if (currentMascotType === 'star') {
+        speakText("¡Girando con toda la energía de nuestra comunidad!");
+      }
+    }
+
+    function resetRobot() {
+      stopAudio(); triggerHaptic(); 
+      isActionActive = false; 
+      isCelebrating = false; 
+      isCentering = true;
+      if (starMaterialRef) {
+        starMaterialRef.emissive.setHex(0x000000);
+        starMaterialRef.emissiveIntensity = 0;
+      }
+    }
+
+    function onWindowResize() {
+      const container = document.getElementById('robot-container');
+      if (!container || !renderer3D || !camera3D) return;
+      camera3D.aspect = container.clientWidth / container.clientHeight;
+      camera3D.updateProjectionMatrix();
+      renderer3D.setSize(container.clientWidth, container.clientHeight);
+    }
+    window.addEventListener('resize', onWindowResize);
+
+    function popBubble(msg) {
+      stopAudio(); triggerHaptic();
+      document.getElementById('bubble-message-box').innerHTML = `<p class="text-slate-900 text-lg font-bold">✨ "${msg}"</p>`;
+      confetti({ particleCount: 25, spread: 50 });
+      speakText(msg);
+    }
+
+    function playMemoryStory(title, story) {
+      stopAudio(); triggerHaptic();
+      document.getElementById('memory-display').innerHTML = `<p class="text-slate-900 text-lg font-bold">❤️ <strong>${title}:</strong> ${story}</p>`;
+      speakText(story);
+    }
+
+    /* FONDO DE AGUA ONDULANTE */
+    let backgroundMode = 'home';
+    function initWaterBackground() {
+      const canvas = document.getElementById('water-bg-canvas');
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, -35, 45);
+      camera.rotation.x = 0.55;
+
+      const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const geometry = new THREE.PlaneGeometry(80, 80, 25, 25);
+      const material = new THREE.MeshBasicMaterial({ color: 0x008751, wireframe: true, transparent: true, opacity: 0.12 });
+      const plane = new THREE.Mesh(geometry, material);
+      scene.add(plane);
+
+      let clock = new THREE.Clock();
+      function animateWater() {
+        requestAnimationFrame(animateWater);
+        const time = clock.getElapsedTime();
+        const pos = geometry.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const u = pos.getX(i), v = pos.getY(i);
+          pos.setZ(i, Math.sin(u * 0.3 + time * 1.2) * Math.cos(v * 0.3 + time * 1.2) * 2.0);
+        }
+        pos.needsUpdate = true;
+        renderer.render(scene, camera);
+      }
+      animateWater();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+
+    function updateBackgroundMode(mode) { backgroundMode = mode; }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initSpeechEngine();
+      initWaterBackground();
+      setTimeout(init3DMascot, 50);
+      
+      renderCurrentRiddle();
+      loadQuizQuestion();
+
+      window.addEventListener('touchstart', () => {
+        if ('speechSynthesis' in window && window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+      }, { once: true });
+    });
+  </script>
+</body>
+</html>
